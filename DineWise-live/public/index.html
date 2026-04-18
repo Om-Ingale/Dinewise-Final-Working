@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dine Wise</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <nav class="topbar">
+        <div class="brand-lockup">
+          <span class="brand-mark">DW</span>
+          <div>
+            <p class="eyebrow">Restaurant Intelligence</p>
+            <h1>Dine Wise</h1>
+          </div>
+        </div>
+        <a class="ghost-link" href="#platforms">Platform Coverage</a>
+      </nav>
+
+      <section class="hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Search Restaurants Across India</p>
+          <h2>Ratings, reviews and location data in one place.</h2>
+          <p class="hero-text">
+            Search any restaurant in India and compare Google data with optional Swiggy and Zomato connectors inside one clean dashboard.
+          </p>
+
+          <form id="searchForm" class="search-panel">
+            <label>
+              Restaurant name
+              <input id="queryInput" name="q" type="text" placeholder="Example: Pizza By The Bay" required>
+            </label>
+            <label>
+              City or area
+              <input id="locationInput" name="location" type="text" placeholder="Mumbai, Pune, Delhi, Bengaluru..." value="Mumbai">
+            </label>
+            <button type="submit">Search Dine Wise</button>
+          </form>
+
+          <div id="providerStatus" class="provider-banner" aria-live="polite"></div>
+        </div>
+
+        <aside class="hero-card">
+          <p class="eyebrow">What You Get</p>
+          <ul>
+            <li>Google live rating and review data when API key is configured</li>
+            <li>India-wide restaurant search by name and location</li>
+            <li>Pluggable Swiggy and Zomato provider connectors</li>
+            <li>Location links and quick review context in one result card</li>
+          </ul>
+        </aside>
+      </section>
+    </header>
+
+    <main class="content">
+      <section id="platforms" class="platform-strip">
+        <article>
+          <span class="pill live">Google</span>
+          <p>Official Places API integration for ratings, reviews and maps links.</p>
+        </article>
+        <article>
+          <span class="pill optional">Swiggy</span>
+          <p>Connector slot ready for your approved provider or proxy endpoint.</p>
+        </article>
+        <article>
+          <span class="pill optional">Zomato</span>
+          <p>Connector slot ready for your approved provider or proxy endpoint.</p>
+        </article>
+      </section>
+
+      <section class="results-section">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Search Results</p>
+            <h3 id="resultsTitle">Find a restaurant to begin</h3>
+          </div>
+          <p id="resultsMeta" class="results-meta">No search yet.</p>
+        </div>
+
+        <div id="loadingState" class="state-card hidden">Loading restaurant data...</div>
+        <div id="errorState" class="state-card error hidden"></div>
+        <div id="resultsGrid" class="results-grid"></div>
+      </section>
+
+      <section id="detailsSection" class="details-section hidden">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Restaurant View</p>
+            <h3 id="detailsTitle">Selected restaurant</h3>
+          </div>
+        </div>
+
+        <div id="detailsContent" class="details-card"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

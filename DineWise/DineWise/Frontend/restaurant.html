@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Restaurant Details - DineWise</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Quintessential&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="index.html" class="nav-left">DineWise</a>
+</nav>
+
+<section class="restaurant-dashboard">
+
+    <div class="dashboard-card main-card">
+        <h2 class="restaurant-title" id="restaurant-name"></h2>
+        <p class="restaurant-address" id="restaurant-location"></p>
+
+        <div class="rating-block">
+            <span class="rating-label">DineWise Rating</span>
+            <span class="rating-value"><span id="average"></span> ⭐</span>
+        </div>
+    </div>
+
+    <div class="dashboard-card platform-card">
+        <h3 class="platform-name">Zomato</h3>
+        <span class="rating-label">Rating</span>
+        <span class="rating-value"><span id="zomato"></span> ⭐</span>
+    </div>
+
+    <div class="dashboard-card platform-card">
+        <h3 class="platform-name">Swiggy</h3>
+        <span class="rating-label">Rating</span>
+        <span class="rating-value"><span id="swiggy"></span> ⭐</span>
+    </div>
+
+    <div class="dashboard-card platform-card">
+        <h3 class="platform-name">Google</h3>
+        <span class="rating-label">Rating</span>
+        <span class="rating-value"><span id="google"></span> ⭐</span>
+    </div>
+
+</section>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const restaurantName = params.get("name");
+
+async function loadRestaurantDetails() {
+    try {
+        const response = await fetch(`http://localhost:8080/restaurants/search?name=${encodeURIComponent(restaurantName)}`);
+        const restaurant = await response.json();
+
+        // Update UI with Backend Data
+        document.getElementById("restaurant-name").innerText = restaurant.name;
+        document.getElementById("zomato").innerText = restaurant.zomatoRating.toFixed(1);
+        document.getElementById("swiggy").innerText = restaurant.swiggyRating.toFixed(1);
+        document.getElementById("google").innerText = restaurant.googleRating.toFixed(1);
+        document.getElementById("average").innerText = restaurant.averageRating.toFixed(1);
+        
+        // Optional: Update location if your backend returns a city
+        if(restaurant.city) {
+            document.getElementById("restaurant-location").innerText = restaurant.city + ", Mumbai";
+        }
+
+    } catch (error) {
+        console.error("Error loading restaurant:", error);
+        document.querySelector(".restaurant-dashboard").innerHTML = "<h2>Restaurant Details Not Found</h2>";
+    }
+}
+
+if (restaurantName) {
+    loadRestaurantDetails();
+}
+</script>
+
+</body>
+</html>

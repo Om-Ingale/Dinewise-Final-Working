@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DineWise</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Quintessential&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+</head>
+<body>
+
+<nav class="navbar">
+   <a href="index.html" class="nav-left">DineWise</a>
+
+    <ul class="nav-center">
+        <li><a href="#features">Why DineWise</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#contact">Contact</a></li>
+    </ul>
+
+    <div class="nav-right">
+        <a href="compare.html" class="login-btn">Compare</a>
+        <a href="#" class="login-btn">Login</a>
+        <a href="#" class="signup-btn">Sign Up</a>
+    </div>
+</nav>
+
+
+<section class="hero">
+
+    <div class="hero-content">
+
+        <h1 class="brand-name">DineWise</h1>
+
+
+        <h2>Mumbai's Food Scene, Decoded.</h2>
+<p>
+Because one rating never tells the whole story.
+We crunch the numbers from the Big Three so you don’t have to.
+</p>
+
+
+       <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Search restaurants...">
+    <button onclick="handleSearch()">Search</button>
+</div>
+
+<div id="suggestions" class="suggestions-container"></div>
+
+
+    </div>
+
+</section>
+
+<section id="features" class="features-section">
+
+    <h2 class="features-heading">Why DineWise?</h2>
+
+    <div class="features">
+
+        <div class="feature-card">
+            <h3>Multi-Platform Intelligence</h3>
+            <p>
+                Access Zomato, Swiggy, and Google ratings in one unified view.
+            </p>
+        </div>
+
+        <div class="feature-card">
+            <h3>The Unified Score</h3>
+            <p>
+                Our smart averaging system delivers a clear, unbiased verdict.
+            </p>
+        </div>
+
+        <div class="feature-card">
+            <h3>Effortless Efficiency</h3>
+            <p>
+                Skip app-switching. Get Mumbai’s food insights instantly.
+            </p>
+        </div>
+
+    </div>
+
+</section>
+
+<section id="about" class="about">
+
+    <div class="about-container">
+
+        <h2 class="about-heading">The Mission</h2>
+
+        <div class="about-grid">
+
+            <div class="about-label">Purpose</div>
+            <div class="about-text">
+                DineWise is a Restaurant Review and Rating Aggregation System
+                designed to simplify restaurant evaluation in today’s fragmented
+                digital landscape.
+                <hr>
+            </div>
+
+            <div class="about-label">Challenge</div>
+            <div class="about-text">
+                Platforms like Zomato, Swiggy, and Google provide independent
+                ratings, making it difficult for users to interpret scattered
+                and inconsistent information.<hr>
+            </div>
+
+            <div class="about-label">Solution</div>
+            <div class="about-text">
+                Our system consolidates platform-wise ratings into a single,
+                structured interface with automated average score calculation.<hr>
+            </div>
+
+            <div class="about-label">Impact </div>
+            <div class="about-text">
+                By eliminating app-switching, DineWise enhances efficiency and
+                enables informed dining decisions.<hr>
+            </div>
+
+            <div class="about-label">Academic Context</div>
+            <div class="about-text">
+                Developed as a Mumbai University Engineering Mini Project,
+                demonstrating the architecture of a multi-source web-based
+                data aggregation system.<hr>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<section id="contact" class="contact">
+
+    <h2>Connect With Us</h2>
+
+    <p><strong>Team:</strong> Rajvi, Govind, Ayush & Pratik</p>
+    <p><strong>Institution:</strong> Mumbai University</p>
+    <p><strong>Email:</strong> dinewise.project@gmail.com</p>
+
+    <!-- FEEDBACK FORM -->
+    <div class="feedback-container">
+
+        <h3>Send Us Your Feedback</h3>
+
+        <form class="feedback-form">
+            <input type="text" placeholder="Your Name" required>
+            <input type="email" placeholder="Your Email" required>
+            <textarea placeholder="Your Feedback" rows="4" required></textarea>
+            <button type="submit">Submit Feedback</button>
+        </form>
+
+    </div>
+
+</section>
+
+<footer class="footer">
+    2026 DineWise | Restaurant Review & Rating Aggregation System
+</footer>
+
+<script>
+
+const input = document.getElementById("searchInput");
+const suggestions = document.getElementById("suggestions");
+
+async function showSuggestions() {
+    const query = input.value.trim();
+    if (query.length < 2) {
+        suggestions.innerHTML = "";
+        return;
+    }
+
+    try {
+        // Calling your Spring Boot Backend
+        const response = await fetch(`http://localhost:8080/restaurants/search?name=${query}`);
+        const data = await response.json();
+
+        suggestions.innerHTML = "";
+        const card = document.createElement("div");
+        card.classList.add("suggestion-card");
+        card.innerHTML = `
+            <strong>${data.name}</strong>
+            <span>⭐ ${data.averageRating.toFixed(1)}</span>
+        `;
+        // Pass the name as a query param to the details page
+        card.onclick = () => {
+            window.location.href = `restaurant.html?name=${encodeURIComponent(data.name)}`;
+        };
+        suggestions.appendChild(card);
+    } catch (error) {
+        console.error("Error fetching suggestions:", error);
+    }
+}
+
+function handleSearch() {
+    const query = input.value.trim();
+    if (query) {
+        window.location.href = `restaurant.html?name=${encodeURIComponent(query)}`;
+    }
+}
+
+</script>
+
+
+</body>
+</html>

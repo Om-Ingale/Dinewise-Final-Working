@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Compare Restaurants - DineWise</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Quintessential&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="index.html" class="nav-left">DineWise</a>
+    <div class="nav-right">
+        <a href="index.html" class="login-btn">Home</a>
+    </div>
+</nav>
+
+<section class="compare-container">
+    <div class="compare-hero-visual">
+        <h2 class="compare-title">Battle of the Flavors</h2>
+        <p class="compare-subtitle">Analyze performance across <strong>Mumbai</strong></p>
+        
+        <div class="search-comparison-zone">
+            <div class="search-wrapper">
+                <input type="text" id="search1" placeholder="First Restaurant..." autocomplete="off">
+                <div id="suggest1" class="mini-suggestions"></div>
+            </div>
+
+            <div class="vs-circle">VS</div>
+
+            <div class="search-wrapper">
+                <input type="text" id="search2" placeholder="Second Restaurant..." autocomplete="off">
+                <div id="suggest2" class="mini-suggestions"></div>
+            </div>
+        </div>
+        <button class="compare-trigger-btn" onclick="startComparison()">Compare Now</button>
+    </div>
+
+    <div id="result-display" class="hidden">
+        <div class="compare-cards" id="cards-container"></div>
+    </div>
+</section>
+
+<script src="compare.js"></script>
+</body>
+</html>

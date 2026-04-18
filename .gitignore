@@ -1,0 +1,25 @@
+# Node.js (DineWise-live)
+DineWise-live/node_modules/
+DineWise-live/npm-debug.log*
+DineWise-live/yarn-debug.log*
+DineWise-live/yarn-error.log*
+DineWise-live/pnpm-debug.log*
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+DineWise-live/.env
+DineWise-live/.env.*
+!DineWise-live/.env.example
+
+# Java / Maven (Spring backend)
+DineWise/DineWise/Backend/dinewise/target/
+DineWise/DineWise/Backend/dinewise/.mvn/wrapper/maven-wrapper.jar
+
+# IDE / OS
+.vscode/
+.idea/
+*.iml
+.DS_Store
+Thumbs.db

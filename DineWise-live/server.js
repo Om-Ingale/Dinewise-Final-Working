@@ -7,6 +7,7 @@ loadEnv(path.join(__dirname, ".env"));
 
 const PORT = Number(process.env.PORT || 3017);
 const PUBLIC_DIR = path.join(__dirname, "public");
+let googleProviderState = getGooglePlacesApiKey() ? "live" : "missing_api_key";
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -184,84 +185,104 @@ async function handlePlatformProxy(requestUrl, res, platform) {
 }
 
 async function searchGooglePlaces(query, location) {
-  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  const apiKey = getGooglePlacesApiKey();
   if (!apiKey) {
+    googleProviderState = "missing_api_key";
     return buildGoogleFallbackResults(query, location);
   }
 
-  const response = await fetch("https://places.googleapis.com/v1/places:searchText", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Goog-Api-Key": apiKey,
-      "X-Goog-FieldMask": [
-        "places.id",
-        "places.displayName",
-        "places.formattedAddress",
-        "places.rating",
-        "places.userRatingCount",
-        "places.location",
-        "places.googleMapsUri",
-        "places.websiteUri",
-        "places.nationalPhoneNumber",
-        "places.regularOpeningHours.weekdayDescriptions",
-        "places.primaryTypeDisplayName",
-        "places.editorialSummary",
-        "places.photos",
-      ].join(","),
-    },
-    body: JSON.stringify({
-      textQuery: `${query} restaurant ${location}`,
-      pageSize: 8,
-      languageCode: "en",
-      regionCode: "IN",
-    }),
-  });
+  try {
+    const response = await fetch("https://places.googleapis.com/v1/places:searchText", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": apiKey,
+        "X-Goog-FieldMask": [
+          "places.id",
+          "places.displayName",
+          "places.formattedAddress",
+          "places.rating",
+          "places.userRatingCount",
+          "places.location",
+          "places.googleMapsUri",
+          "places.websiteUri",
+          "places.nationalPhoneNumber",
+          "places.regularOpeningHours.weekdayDescriptions",
+          "places.primaryTypeDisplayName",
+          "places.editorialSummary",
+          "places.photos",
+        ].join(","),
+      },
+      body: JSON.stringify({
+        textQuery: `${query} restaurant ${location}`,
+        pageSize: 8,
+        languageCode: "en",
+        regionCode: "IN",
+      }),
+    });
 
-  if (!response.ok) {
-    const message = await safeErrorMessage(response);
-    throw new Error(`Google Places search failed: ${message}`);
+    if (!response.ok) {
+      const message = await safeErrorMessage(response);
+      googleProviderState = "provider_error";
+      warnWithThrottle("google-search", `Google Places search failed, using fallback: ${message}`);
+      return buildGoogleFallbackResults(query, location, message);
+    }
+
+    googleProviderState = "live";
+    const payload = await response.json();
+    return (payload.places || []).map(normalizeGooglePlace);
+  } catch (error) {
+    googleProviderState = "provider_error";
+    warnWithThrottle("google-search", `Google Places search error, using fallback: ${error.message}`);
+    return buildGoogleFallbackResults(query, location, error.message);
   }
-
-  const payload = await response.json();
-  return (payload.places || []).map(normalizeGooglePlace);
 }
 
 async function getGooglePlaceDetails(placeId) {
-  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  const apiKey = getGooglePlacesApiKey();
   if (!apiKey) {
+    googleProviderState = "missing_api_key";
     return buildFallbackPlaceDetails(placeId);
   }
 
-  const response = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`, {
-    headers: {
-      "X-Goog-Api-Key": apiKey,
-      "X-Goog-FieldMask": [
-        "id",
-        "displayName",
-        "formattedAddress",
-        "location",
-        "googleMapsUri",
-        "websiteUri",
-        "nationalPhoneNumber",
-        "regularOpeningHours.weekdayDescriptions",
-        "primaryTypeDisplayName",
-        "editorialSummary",
-        "rating",
-        "userRatingCount",
-        "reviews",
-        "photos",
-      ].join(","),
-    },
-  });
+  try {
+    const response = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`, {
+      headers: {
+        "X-Goog-Api-Key": apiKey,
+        "X-Goog-FieldMask": [
+          "id",
+          "displayName",
+          "formattedAddress",
+          "location",
+          "googleMapsUri",
+          "websiteUri",
+          "nationalPhoneNumber",
+          "regularOpeningHours.weekdayDescriptions",
+          "primaryTypeDisplayName",
+          "editorialSummary",
+          "rating",
+          "userRatingCount",
+          "reviews",
+          "photos",
+        ].join(","),
+      },
+    });
 
-  if (!response.ok) {
-    const message = await safeErrorMessage(response);
-    throw new Error(`Google Place Details failed: ${message}`);
+    if (!response.ok) {
+      const message = await safeErrorMessage(response);
+      googleProviderState = "provider_error";
+      warnWithThrottle("google-details", `Google Place Details failed, using fallback: ${message}`);
+      return buildFallbackPlaceDetails(placeId, message);
+    }
+
+    googleProviderState = "live";
+    const payload = await response.json();
+    return normalizeGooglePlace(payload);
+  } catch (error) {
+    googleProviderState = "provider_error";
+    warnWithThrottle("google-details", `Google Place Details error, using fallback: ${error.message}`);
+    return buildFallbackPlaceDetails(placeId, error.message);
   }
-
-  const payload = await response.json();
-  return normalizeGooglePlace(payload);
 }
 
 async function fetchPlatformRating(platform, place, query, location) {
@@ -414,7 +435,7 @@ function normalizeGooglePlace(place) {
     imageUri: photoName ? buildPhotoUri(photoName) : null,
     google: {
       source: "Google",
-      status: process.env.GOOGLE_PLACES_API_KEY ? "live" : "demo",
+      status: getGooglePlacesApiKey() ? "live" : "demo",
       rating: toNumberOrNull(place.rating),
       reviewCount: toNumberOrNull(place.userRatingCount),
       reviewSnippet: place.editorialSummary ? place.editorialSummary.text : "",
@@ -435,7 +456,7 @@ function normalizeGoogleReviews(reviews) {
 }
 
 function buildPhotoUri(photoName) {
-  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  const apiKey = getGooglePlacesApiKey();
   if (!apiKey || !photoName) {
     return null;
   }
@@ -445,14 +466,22 @@ function buildPhotoUri(photoName) {
 
 function getProviderStatus() {
   return {
-    google: process.env.GOOGLE_PLACES_API_KEY ? "live" : "missing_api_key",
-    swiggy: process.env.SWIGGY_PROVIDER_URL ? "configured" : "internal_scraper",
-    zomato: process.env.ZOMATO_PROVIDER_URL ? "configured" : "internal_scraper",
+    google: googleProviderState,
+    swiggy: readEnv("SWIGGY_PROVIDER_URL") ? "configured" : "internal_scraper",
+    zomato: readEnv("ZOMATO_PROVIDER_URL") ? "configured" : "internal_scraper",
   };
 }
 
-function buildGoogleFallbackResults(query, location) {
+function buildGoogleFallbackResults(query, location, failureReason = "") {
   const label = `${query} in ${location}`;
+  const hasGoogleKey = Boolean(getGooglePlacesApiKey());
+  const summary = hasGoogleKey
+    ? "Google data is temporarily unavailable. Check Places API enablement and API key restrictions in Google Cloud."
+    : "Add GOOGLE_PLACES_NEW_API_KEY (or GOOGLE_PLACES_API_KEY) to load live restaurant ratings, reviews, and location details.";
+  const reviewSnippet = hasGoogleKey
+    ? `Google provider unavailable. ${failureReason || "Please verify API access."}`
+    : "Google Places API (New) key not configured.";
+
   return [
     {
       id: "demo-place-1",
@@ -466,13 +495,13 @@ function buildGoogleFallbackResults(query, location) {
       cuisines: "Restaurant",
       nationalPhoneNumber: null,
       regularOpeningHours: [],
-      summary: "Add a Google Places API key to load live restaurant ratings, reviews, and location details.",
+      summary,
       google: {
         source: "Google",
-        status: "demo",
+        status: hasGoogleKey ? "provider_error" : "demo",
         rating: null,
         reviewCount: null,
-        reviewSnippet: "Google Places API key not configured.",
+        reviewSnippet,
         reviews: [],
         url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(label)}`,
       },
@@ -480,7 +509,8 @@ function buildGoogleFallbackResults(query, location) {
   ];
 }
 
-function buildFallbackPlaceDetails(placeId) {
+function buildFallbackPlaceDetails(placeId, failureReason = "") {
+  const hasGoogleKey = Boolean(getGooglePlacesApiKey());
   return {
     id: placeId,
     name: "Dine Wise Demo Result",
@@ -492,14 +522,18 @@ function buildFallbackPlaceDetails(placeId) {
     nationalPhoneNumber: null,
     regularOpeningHours: [],
     cuisines: "Restaurant",
-    summary: "Configure GOOGLE_PLACES_API_KEY to load live Google data.",
+    summary: hasGoogleKey
+      ? "Google data is temporarily unavailable. Check Places API enablement and API key restrictions in Google Cloud."
+      : "Configure GOOGLE_PLACES_NEW_API_KEY (or GOOGLE_PLACES_API_KEY) to load live Google data.",
     imageUri: null,
     google: {
       source: "Google",
-      status: "demo",
+      status: hasGoogleKey ? "provider_error" : "demo",
       rating: null,
       reviewCount: null,
-      reviewSnippet: "Google Places API key not configured.",
+      reviewSnippet: hasGoogleKey
+        ? `Google provider unavailable. ${failureReason || "Please verify API access."}`
+        : "Google Places API (New) key not configured.",
       reviews: [],
       url: "https://www.google.com/maps",
     },
@@ -560,9 +594,29 @@ function loadEnv(filePath) {
 
     const key = line.slice(0, separator).trim();
     const value = line.slice(separator + 1).trim();
-    if (!(key in process.env)) {
+    if (!Object.prototype.hasOwnProperty.call(process.env, key) || !String(process.env[key] || "").trim()) {
       process.env[key] = value;
     }
+  }
+}
+
+function readEnv(key) {
+  const value = process.env[key];
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function getGooglePlacesApiKey() {
+  return readEnv("GOOGLE_PLACES_NEW_API_KEY") || readEnv("GOOGLE_PLACES_API_KEY");
+}
+
+const warnThrottleState = new Map();
+
+function warnWithThrottle(key, message, cooldownMs = 45000) {
+  const now = Date.now();
+  const last = warnThrottleState.get(key) || 0;
+  if (now - last >= cooldownMs) {
+    console.warn(message);
+    warnThrottleState.set(key, now);
   }
 }
 

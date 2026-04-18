@@ -27,12 +27,14 @@
         <h3 class="platform-name">Zomato</h3>
         <span class="rating-label">Rating</span>
         <span class="rating-value"><span id="zomato"></span> ⭐</span>
+        <div id="zomato-reviews" class="reviews-container"></div>
     </div>
 
     <div class="dashboard-card platform-card">
         <h3 class="platform-name">Swiggy</h3>
         <span class="rating-label">Rating</span>
         <span class="rating-value"><span id="swiggy"></span> ⭐</span>
+        <div id="swiggy-reviews" class="reviews-container"></div>
     </div>
 
     <div class="dashboard-card platform-card">
@@ -46,6 +48,24 @@
 <script>
 const params = new URLSearchParams(window.location.search);
 const restaurantName = params.get("name");
+
+function renderReviews(containerId, reviews) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
+    if (!reviews || reviews.length === 0) {
+        container.innerHTML = "<p class='no-reviews'>No reviews found</p>";
+        return;
+    }
+    const list = document.createElement("ul");
+    list.className = "reviews-list";
+    reviews.forEach(review => {
+        const item = document.createElement("li");
+        item.className = "review-item";
+        item.innerHTML = review; // using innerHTML since serpapi snippets might contain html
+        list.appendChild(item);
+    });
+    container.appendChild(list);
+}
 
 async function loadRestaurantDetails() {
     try {
@@ -64,6 +84,9 @@ async function loadRestaurantDetails() {
             document.getElementById("restaurant-location").innerText = restaurant.city + ", Mumbai";
         }
 
+        renderReviews("zomato-reviews", restaurant.zomatoReviews);
+        renderReviews("swiggy-reviews", restaurant.swiggyReviews);
+
     } catch (error) {
         console.error("Error loading restaurant:", error);
         document.querySelector(".restaurant-dashboard").innerHTML = "<h2>Restaurant Details Not Found</h2>";
@@ -74,6 +97,31 @@ if (restaurantName) {
     loadRestaurantDetails();
 }
 </script>
+
+<style>
+.reviews-container {
+    margin-top: 15px;
+    font-size: 0.9em;
+    text-align: left;
+}
+.reviews-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+.review-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    border-left: 3px solid #ff4e50;
+    color: #e0e0e0;
+}
+.no-reviews {
+    color: #999;
+    font-style: italic;
+}
+</style>
 
 </body>
 </html>

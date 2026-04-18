@@ -286,6 +286,11 @@ async function getGooglePlaceDetails(placeId) {
 }
 
 async function fetchPlatformRating(platform, place, query, location) {
+  const serpApiKey = process.env.SERPAPI_API_KEY;
+  if (serpApiKey) {
+    return fetchFromSerpApi(platform, place, query, location, serpApiKey);
+  }
+
   const template =
     platform === "swiggy"
       ? process.env.SWIGGY_PROVIDER_URL
@@ -335,6 +340,75 @@ async function fetchPlatformRating(platform, place, query, location) {
       reviewCount: null,
       reviewSnippet: error.message,
       url: providerUrl,
+    };
+  }
+}
+
+async function fetchFromSerpApi(platform, place, query, location, apiKey) {
+  const searchQuery = `${place.name || query} ${location} ${platform}`;
+  const url = `https://serpapi.com/search.json?q=${encodeURIComponent(searchQuery)}&api_key=${apiKey}`;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      return {
+        source: capitalize(platform),
+        status: "provider_error",
+        rating: null,
+        reviewCount: null,
+        reviewSnippet: `SerpAPI returned ${response.status}`,
+        url: null,
+      };
+    }
+
+    const data = await response.json();
+    const organicResults = data.organic_results || [];
+    
+    const domain = platform === "swiggy" ? "swiggy.com" : "zomato.com";
+    const result = organicResults.find(r => r.link && r.link.includes(domain));
+
+    if (!result) {
+      return {
+        source: capitalize(platform),
+        status: "search_no_match",
+        rating: null,
+        reviewCount: null,
+        reviewSnippet: `No ${capitalize(platform)} match found via SerpAPI.`,
+        url: null,
+      };
+    }
+
+    let rating = null;
+    let reviewCount = null;
+
+    if (result.rich_snippet && result.rich_snippet.top && result.rich_snippet.top.detected_extensions) {
+        const ext = result.rich_snippet.top.detected_extensions;
+        if (ext.rating) rating = toNumberOrNull(ext.rating);
+        if (ext.reviews) reviewCount = toNumberOrNull(ext.reviews);
+    }
+
+    if (rating === null || reviewCount === null) {
+        const extracted = extractRatingFromHtml(platform, result.snippet || "");
+        if (rating === null) rating = extracted.rating;
+        if (reviewCount === null) reviewCount = extracted.reviewCount;
+    }
+
+    return {
+      source: capitalize(platform),
+      status: rating !== null ? "live" : "scraped_partial",
+      rating: rating,
+      reviewCount: reviewCount,
+      reviewSnippet: result.snippet || "",
+      url: result.link || null,
+    };
+  } catch (error) {
+    return {
+      source: capitalize(platform),
+      status: "provider_error",
+      rating: null,
+      reviewCount: null,
+      reviewSnippet: error.message,
+      url: null,
     };
   }
 }

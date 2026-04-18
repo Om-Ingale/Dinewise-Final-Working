@@ -30,12 +30,19 @@ public class RestaurantService {
 
         if (existing.isPresent()) {
             Restaurant r = existing.get();
+            
+            String query = (city != null && !city.isEmpty()) ? name + " " + city : name;
+            java.util.List<String> zomatoReviews = serpApiService.getZomatoReviews(query);
+            java.util.List<String> swiggyReviews = serpApiService.getSwiggyReviews(query);
+
             return new RestaurantResponseDTO(
                     r.getName(),
                     r.getGoogleRating(),
                     r.getZomatoRating(),
                     r.getSwiggyRating(),
-                    r.getAverageRating()
+                    r.getAverageRating(),
+                    zomatoReviews,
+                    swiggyReviews
             );
         }
 
@@ -46,6 +53,9 @@ public class RestaurantService {
         Double google = googlePlacesService.getGoogleRating(query);
         Double zomato = serpApiService.getZomatoRating(query);
         Double swiggy = serpApiService.getSwiggyRating(query);
+        
+        java.util.List<String> zomatoReviews = serpApiService.getZomatoReviews(query);
+        java.util.List<String> swiggyReviews = serpApiService.getSwiggyReviews(query);
 
         zomato = fixMissing(zomato, google, swiggy);
         swiggy = fixMissing(swiggy, google, zomato);
@@ -74,7 +84,7 @@ public class RestaurantService {
 
         externalRatingService.saveRatings(saved, query);
 
-        return new RestaurantResponseDTO(name, google, zomato, swiggy, avg);
+        return new RestaurantResponseDTO(name, google, zomato, swiggy, avg, zomatoReviews, swiggyReviews);
     }
 
     private Double fixMissing(Double value, Double a, Double b) {

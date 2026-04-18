@@ -228,7 +228,7 @@ a {
 .platform-strip {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
+  gap: 24px;
 }
 
 .platform-strip article,
@@ -239,6 +239,72 @@ a {
   padding: 22px;
 }
 
+.platform-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  padding: 24px;
+  backdrop-filter: blur(20px);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 250, 244, 0.7));
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 10px 30px rgba(64, 34, 20, 0.06);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.platform-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 24px;
+  padding: 2px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(255,255,255,0));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.platform-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(64, 34, 20, 0.12);
+  background: linear-gradient(135deg, #ffffff, rgba(255, 248, 238, 0.95));
+}
+
+.platform-card:hover::after {
+  content: "";
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 60%);
+  opacity: 1;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.platform-card-header,
+.platform-desc {
+  position: relative;
+  z-index: 1;
+}
+
+.platform-card-header {
+  display: flex;
+  align-items: center;
+}
+
+.platform-desc {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--muted);
+  font-weight: 500;
+}
+
 .pill {
   display: inline-flex;
   padding: 8px 12px;
@@ -247,14 +313,22 @@ a {
   font-weight: 800;
 }
 
-.pill.live {
-  color: #fef6ef;
-  background: var(--olive);
+.pill.google {
+  color: #fff;
+  background: linear-gradient(135deg, #4285F4, #34A853);
+  box-shadow: 0 4px 12px rgba(66, 133, 244, 0.25);
 }
 
-.pill.optional {
-  color: var(--accent-deep);
-  background: rgba(169, 65, 29, 0.1);
+.pill.swiggy {
+  color: #fff;
+  background: linear-gradient(135deg, #fc8019, #e06c11);
+  box-shadow: 0 4px 12px rgba(252, 128, 25, 0.25);
+}
+
+.pill.zomato {
+  color: #fff;
+  background: linear-gradient(135deg, #e23744, #bd2c38);
+  box-shadow: 0 4px 12px rgba(226, 55, 68, 0.25);
 }
 
 .results-section,

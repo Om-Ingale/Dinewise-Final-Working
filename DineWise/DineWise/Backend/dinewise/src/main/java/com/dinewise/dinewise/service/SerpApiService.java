@@ -104,4 +104,50 @@ public class SerpApiService {
             return 0.0;
         }
     }
+
+    public java.util.List<String> getZomatoReviews(String name) {
+        return fetchReviews(name + " zomato reviews", "zomato");
+    }
+
+    public java.util.List<String> getSwiggyReviews(String name) {
+        return fetchReviews(name + " swiggy reviews", "swiggy");
+    }
+
+    private java.util.List<String> fetchReviews(String query, String platform) {
+        java.util.List<String> reviews = new java.util.ArrayList<>();
+        try {
+            String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
+
+            String url = "https://serpapi.com/search.json?q="
+                    + encodedQuery
+                    + "&api_key=" + apiKey;
+
+            String response = restTemplate.getForObject(url, String.class);
+
+            JSONObject json = new JSONObject(response);
+
+            if (!json.has("organic_results")) {
+                return reviews;
+            }
+
+            JSONArray results = json.getJSONArray("organic_results");
+
+            for (int i = 0; i < results.length(); i++) {
+                JSONObject result = results.getJSONObject(i);
+                
+                String source = result.optString("source", "").toLowerCase();
+                String link = result.optString("link", "").toLowerCase();
+
+                if (!source.contains(platform) && !link.contains(platform)) continue;
+
+                String snippet = result.optString("snippet", "");
+                if (!snippet.isEmpty()) {
+                    reviews.add(snippet);
+                }
+            }
+        } catch (Exception e) {
+            // Ignore exceptions and return empty list
+        }
+        return reviews;
+    }
 }

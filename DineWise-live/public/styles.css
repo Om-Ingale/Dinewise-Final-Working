@@ -556,3 +556,77 @@ a {
     max-width: none;
   }
 }
+
+.mode-toggle {
+  display: flex;
+  gap: 12px;
+  margin-top: 28px;
+  margin-bottom: -14px;
+  position: relative;
+  z-index: 2;
+}
+
+.mode-toggle button {
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(73, 49, 31, 0.1);
+  padding: 8px 16px;
+  border-radius: 99px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--muted);
+  transition: all 0.2s;
+}
+
+.mode-toggle button.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+#compareForm {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.filters {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  font-size: 0.9rem;
+  color: var(--muted);
+  padding: 8px 0;
+}
+
+.filters label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.full-width-btn {
+  grid-column: 1 / -1;
+  padding: 14px;
+}
+
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.category-bar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.category-bar progress {
+  width: 60%;
+  accent-color: var(--accent);
+}
+

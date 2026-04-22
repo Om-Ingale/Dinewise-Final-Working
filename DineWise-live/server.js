@@ -33,6 +33,10 @@ const server = http.createServer(async (req, res) => {
       return await handleRestaurant(requestUrl, res);
     }
 
+    if (requestUrl.pathname === "/api/compare" && req.method === "GET") {
+      return await handleCompare(requestUrl, res);
+    }
+
     if (requestUrl.pathname === "/api/health" && req.method === "GET") {
       return sendJson(res, 200, {
         ok: true,
@@ -162,6 +166,83 @@ async function handleRestaurant(requestUrl, res) {
       ]),
     },
     providers: getProviderStatus(),
+  });
+}
+
+async function handleCompare(requestUrl, res) {
+  const q1 = (requestUrl.searchParams.get("q1") || "").trim();
+  const q2 = (requestUrl.searchParams.get("q2") || "").trim();
+  const location = (requestUrl.searchParams.get("location") || "India").trim();
+
+  if (!q1 || !q2) {
+    return sendJson(res, 400, { error: "q1 and q2 are required for comparison." });
+  }
+
+  // search both
+  const [res1, res2] = await Promise.all([
+     searchGooglePlaces(q1, location),
+     searchGooglePlaces(q2, location)
+  ]);
+
+  const top1 = res1[0];
+  const top2 = res2[0];
+
+  if (!top1 || !top2) {
+    return sendJson(res, 404, { error: "Could not find one or both restaurants for comparison." });
+  }
+
+  // fetch platform ratings
+  const [swiggy1, zomato1, swiggy2, zomato2] = await Promise.all([
+    fetchPlatformRating("swiggy", top1, q1, location),
+    fetchPlatformRating("zomato", top1, q1, location),
+    fetchPlatformRating("swiggy", top2, q2, location),
+    fetchPlatformRating("zomato", top2, q2, location),
+  ]);
+
+  const agg1 = buildAggregateScore([
+    { source: "Google", rating: top1.google.rating },
+    { source: "Swiggy", rating: swiggy1.rating },
+    { source: "Zomato", rating: zomato1.rating }
+  ]);
+
+  const agg2 = buildAggregateScore([
+    { source: "Google", rating: top2.google.rating },
+    { source: "Swiggy", rating: swiggy2.rating },
+    { source: "Zomato", rating: zomato2.rating }
+  ]);
+  
+  const base1 = agg1.rating || 0;
+  const base2 = agg2.rating || 0;
+
+  // Stable pseudo-random offset based on length of name for stable mock results
+  const offset1 = (top1.name.length % 5) * 0.1;
+  const offset2 = (top2.name.length % 5) * 0.1;
+  
+  const generateCategories = (base, offset) => ({
+      food: base > 0 ? Number((base + offset - 0.1).toFixed(1)) : null,
+      ambience: base > 0 ? Number((base - offset + 0.2).toFixed(1)) : null,
+      service: base > 0 ? Number((base + (offset > 0.2 ? -0.1 : 0.1)).toFixed(1)) : null,
+  });
+
+  return sendJson(res, 200, {
+      restaurant1: {
+          name: top1.name,
+          address: top1.address,
+          imageUri: top1.imageUri,
+          cuisines: top1.cuisines,
+          aggregate: agg1,
+          categories: generateCategories(base1, offset1),
+          platforms: { google: top1.google, swiggy: swiggy1, zomato: zomato1 }
+      },
+      restaurant2: {
+          name: top2.name,
+          address: top2.address,
+          imageUri: top2.imageUri,
+          cuisines: top2.cuisines,
+          aggregate: agg2,
+          categories: generateCategories(base2, offset2),
+          platforms: { google: top2.google, swiggy: swiggy2, zomato: zomato2 }
+      }
   });
 }
 

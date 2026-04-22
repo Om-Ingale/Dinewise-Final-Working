@@ -285,7 +285,7 @@ Contributions are welcome! For major changes, please open an issue first to disc
 
 ## 📄 License
 
-MIT — free to use, modify, and distribute.
+MIT — free to use, modify, and distributes.
 
 ---
 

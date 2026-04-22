@@ -31,6 +31,11 @@
             Search any restaurant in India and compare Google data with optional Swiggy and Zomato connectors inside one clean dashboard.
           </p>
 
+          <div class="mode-toggle">
+            <button type="button" id="tabSearch" class="active">Search</button>
+            <button type="button" id="tabCompare">Compare</button>
+          </div>
+
           <form id="searchForm" class="search-panel">
             <label>
               Restaurant name
@@ -41,6 +46,27 @@
               <input id="locationInput" name="location" type="text" placeholder="Mumbai, Pune, Delhi, Bengaluru..." value="Mumbai">
             </label>
             <button type="submit">Search Dine Wise</button>
+          </form>
+
+          <form id="compareForm" class="search-panel hidden">
+            <label>
+              Restaurant 1
+              <input id="compareQuery1" name="q1" type="text" placeholder="e.g. McDonald's" required>
+            </label>
+            <label>
+              Restaurant 2
+              <input id="compareQuery2" name="q2" type="text" placeholder="e.g. Burger King" required>
+            </label>
+            <label>
+              City or area
+              <input id="compareLocation" name="location" type="text" placeholder="Mumbai" value="Mumbai">
+            </label>
+            <div class="filters">
+              <label><input type="checkbox" id="filterAmbience" checked> Ambience</label>
+              <label><input type="checkbox" id="filterService" checked> Service Quality</label>
+              <label><input type="checkbox" id="filterFood" checked> Food Quality</label>
+            </div>
+            <button type="submit" class="full-width-btn">Compare Restaurants</button>
           </form>
 
           <div id="providerStatus" class="provider-banner" aria-live="polite"></div>
